@@ -52,6 +52,20 @@ impl JwsBuilder {
         self
     }
 
+    /// Set the chain of certificates
+    pub fn set_x5c(mut self, x5c: Option<Vec<&str>>) -> Self {
+        if let Some(x5c) = x5c {
+            if x5c.len() == 1 {
+                if let Some(first) = x5c.first() {
+                    self.header.x5c_single = Some(first.to_string());
+                }
+            } else {
+                self.header.x5c = Some(x5c.into_iter().map(|s| s.to_string()).collect());
+            }
+        }
+        self
+    }
+
     /// Finalise this builder
     pub fn build(self) -> Jws {
         let JwsBuilder { header, payload } = self;
