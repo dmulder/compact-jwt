@@ -165,7 +165,7 @@ impl JwsSigner for JwsRs256Signer {
         header.alg = JwaAlg::RS256;
 
         // Only set the kid if it wasn't set previously with JwsBuilder.set_x5c()
-        if let None = header.x5c {
+        if header.x5c.is_none() && header.x5c_single.is_none() {
             header.kid = Some(self.kid.clone());
         }
 

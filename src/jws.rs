@@ -54,11 +54,19 @@ impl JwsBuilder {
 
     /// Set the chain of certificates
     pub fn set_x5c(mut self, x5c: Option<Vec<Vec<u8>>>) -> Self {
-        self.header.x5c = x5c.map(|v| {
-            v.into_iter()
-                .map(|c| general_purpose::STANDARD.encode(c))
-                .collect()
-        });
+        if let Some(ref x5c_list) = x5c {
+            if x5c_list.len() == 1 {
+                self.header.x5c_single =
+                    Some(general_purpose::STANDARD.encode(x5c_list[0].clone()));
+            }
+        }
+        if self.header.x5c_single.is_none() {
+            self.header.x5c = x5c.map(|v| {
+                v.into_iter()
+                    .map(|c| general_purpose::STANDARD.encode(c))
+                    .collect()
+            });
+        }
         self
     }
 
