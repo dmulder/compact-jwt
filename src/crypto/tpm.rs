@@ -57,15 +57,13 @@ where
                 pkey: _,
                 x509: Some(x509),
             } => {
-                header.x5c = Some(vec![general_purpose::STANDARD.encode(
-                    match x509.to_der() {
-                        Ok(der) => der,
-                        Err(ossl_err) => {
-                            error!(?ossl_err);
-                            return Err(JwtError::OpenSSLError);
-                        }
-                    },
-                )])
+                header.x5c_single = Some(general_purpose::STANDARD.encode(match x509.to_der() {
+                    Ok(der) => der,
+                    Err(ossl_err) => {
+                        error!(?ossl_err);
+                        return Err(JwtError::OpenSSLError);
+                    }
+                }))
             }
             _ => {
                 // Only set the kid if it wasn't set previously with JwsBuilder.set_x5c()
