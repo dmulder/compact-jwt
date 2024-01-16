@@ -164,7 +164,10 @@ impl JwsSigner for JwsRs256Signer {
         // Update the alg to match.
         header.alg = JwaAlg::RS256;
 
-        header.kid = Some(self.kid.clone());
+        // Only set the kid if it wasn't set previously with JwsBuilder.set_x5c()
+        if let None = header.x5c {
+            header.kid = Some(self.kid.clone());
+        }
 
         // if were were asked to ember the jwk, do so now.
         if self.sign_option_embed_jwk {
