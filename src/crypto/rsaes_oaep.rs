@@ -34,6 +34,7 @@ impl TryFrom<Rsa<Private>> for JweRSAOAEPDecipher {
 
 impl JweRSAOAEPDecipher {
     pub(crate) fn unwrap_key(&self, jwec: &JweCompact) -> Result<Vec<u8>, JwtError> {
+        println!("content_enc_key: {:?}", &jwec.content_enc_key);
         let expected_wrap_key_buffer_len = jwec.header.enc.key_len();
 
         // Decrypt cek
