@@ -443,6 +443,7 @@ impl FromStr for JweCompact {
             debug!("invalid compact format - content encryption key not present");
             JwtError::InvalidCompactFormat
         })?;
+        println!("content_enc_key at extraction time: {:?}", &content_enc_key_str);
 
         let iv_str = siter.next().ok_or_else(|| {
             debug!("invalid compact format - iv not present");
@@ -471,6 +472,7 @@ impl FromStr for JweCompact {
                 debug!("invalid base64 when decoding content encryption key");
                 JwtError::InvalidBase64
             })?;
+        println!("content_enc_key at extraction time, decoded: {:?}", &content_enc_key);
 
         let iv = general_purpose::URL_SAFE_NO_PAD
             .decode(iv_str)
