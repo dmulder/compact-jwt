@@ -62,6 +62,12 @@ impl JwsBuilder {
         self
     }
 
+    /// Set the base64-encoded bytes used for signature key derivation.
+    pub fn set_ctx(mut self, ctx: Option<&str>) -> Self {
+        self.header.ctx = ctx.map(|s| s.to_string());
+        self
+    }
+
     /// Finalise this builder
     pub fn build(self) -> Jws {
         let JwsBuilder { header, payload } = self;
