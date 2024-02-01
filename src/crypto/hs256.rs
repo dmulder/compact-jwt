@@ -9,6 +9,8 @@ use std::hash::{Hash, Hasher};
 use crate::compact::{JwaAlg, JwsCompact, ProtectedHeader};
 use crate::traits::*;
 use base64::{engine::general_purpose, Engine as _};
+use openssl::hash::MessageDigest;
+use openssl_kdf::{perform_kdf, KdfArgument, KdfKbMode, KdfMacType, KdfType};
 
 /// A JWS signer that creates HMAC SHA256 signatures.
 #[derive(Clone)]
@@ -71,6 +73,37 @@ impl JwsHs256Signer {
             .map_err(|_| JwtError::OpenSSLError)?;
 
         Ok(JwsHs256Signer { kid, skey, digest })
+    }
+
+    /// Derive a new signing key using the specified ctx
+    pub fn derive(&self, ctx: &[u8]) -> Result<Self, JwtError> {
+        let key_der = self.skey.private_key_to_der()
+            .map_err(|_| JwtError::OpenSSLError)?;
+        let args = [
+            &KdfArgument::KbMode(KdfKbMode::Counter),
+            &KdfArgument::Mac(KdfMacType::Hmac(MessageDigest::sha256())),
+            &KdfArgument::Salt(b"AzureAD-SecureConversation"),
+            &KdfArgument::KbInfo(ctx),
+            &KdfArgument::Key(&key_der),
+        ];
+
+        let derived_key = perform_kdf(KdfType::KeyBased, &args, key_der.len())
+            .map_err(|_| JwtError::InvalidKey)?;
+
+        let kid = hash::hash(self.digest, &derived_key)
+            .map(hex::encode)
+            .map_err(|_| JwtError::OpenSSLError)?;
+
+        let skey = pkey::PKey::hmac(&derived_key).map_err(|e| {
+            error!("{:?}", e);
+            JwtError::OpenSSLError
+        })?;
+
+        Ok(JwsHs256Signer {
+            kid,
+            skey,
+            digest: self.digest.clone(),
+        })
     }
 }
 
